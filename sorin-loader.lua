@@ -152,8 +152,8 @@ inputBtn.MouseButton1Click:Connect(function()
 
 	if not success then
 		warn("SERVER-ANTWORT:")
-                warn(response)
-                status.Text = "❌ Fehler: " .. tostring(response)
+		warn(response)
+		status.Text = "❌ Fehler: " .. tostring(response)
 		return
 	end
 
@@ -173,7 +173,7 @@ end)
 
 getKeyBtn.MouseButton1Click:Connect(function()
 	pcall(function()
-		setclipboard("https://sorin.services/getkey")
+		setclipboard("https://sorin-online-73.lovable.app/getkey")
 	end)
 	status.Text = "🔗 Link kopiert (Get Key)"
 end)
@@ -199,7 +199,7 @@ local avatar = Instance.new("ImageLabel", frame)
 avatar.Size = UDim2.new(0, 40, 0, 40)
 avatar.Position = UDim2.new(1, -50, 1, -50)
 avatar.BackgroundTransparency = 1
-avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150&format=png"
+avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=100&height=100&format=png"
 Instance.new("UICorner", avatar).CornerRadius = UDim.new(1, 0)
 
 -- === Konsole-Logs ===
