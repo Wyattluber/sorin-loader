@@ -151,7 +151,9 @@ inputBtn.MouseButton1Click:Connect(function()
 	end)
 
 	if not success then
-		status.Text = "❌ Verbindung fehlgeschlagen"
+		warn("SERVER-ANTWORT:")
+                warn(response)
+                status.Text = "❌ Fehler: " .. tostring(response)
 		return
 	end
 
