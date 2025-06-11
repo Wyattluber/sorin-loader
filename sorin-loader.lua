@@ -1,3 +1,4 @@
+local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
@@ -129,14 +130,44 @@ inputBtn.MouseButton1Click:Connect(function()
 	local key = keyBox.Text
 	if key == "" then
 		status.Text = "❗ Kein Key eingegeben"
-	elseif key == "SorinTestKey" then
-		status.Text = "✅ Key gültig – lade System..."
+		return
+	end
+
+	local hwid = HttpService:GenerateGUID(false)
+	local body = {
+		key = key,
+		roblox_id = tostring(player.UserId),
+		hwid = hwid
+	}
+
+	local jsonBody = HttpService:JSONEncode(body)
+	local success, response = pcall(function()
+		return game:HttpPost(
+			"https://iesugielppyhhvtdzsqq.supabase.co/functions/v1/validate-key",
+			jsonBody,
+			Enum.HttpContentType.ApplicationJson,
+			false
+		)
+	end)
+
+	if not success then
+		status.Text = "❌ Verbindung fehlgeschlagen"
+		return
+	end
+
+	local ok, data = pcall(function()
+		return HttpService:JSONDecode(response)
+	end)
+
+	if ok and data.load then
+		status.Text = "✅ Key gültig – lade..."
 		wait(1)
-		loadstring("print('Sorin Core geladen')")()
+		loadstring(data.load)()
 	else
-		status.Text = "❌ Ungültiger Key"
+		status.Text = "❌ " .. (data.error or "Ungültiger Key")
 	end
 end)
+
 
 getKeyBtn.MouseButton1Click:Connect(function()
 	pcall(function()
