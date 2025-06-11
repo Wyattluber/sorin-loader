@@ -1,11 +1,18 @@
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
+
+-- 🧠 Key aus Datei lesen (wenn vorhanden)
+local savedKey = ""
+if isfile and readfile and isfile("sorin_key.txt") then
+	savedKey = readfile("sorin_key.txt")
+end
+
+-- === GUI Setup ===
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "SorinGui"
 gui.ResetOnSpawn = false
 
--- === Hauptframe ===
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 450, 0, 270)
 frame.Position = UDim2.new(0.5, -225, 0.5, -135)
@@ -15,7 +22,6 @@ frame.Draggable = true
 frame.Parent = gui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
--- === Minimiertes Fenster ===
 local minimized = Instance.new("Frame")
 minimized.Size = UDim2.new(0, 300, 0, 35)
 minimized.Position = UDim2.new(0.5, -150, 0.5, -100)
@@ -50,7 +56,6 @@ restoreButton.MouseButton1Click:Connect(function()
 	frame.Visible = true
 end)
 
--- === Titel & Buttons ===
 local title = Instance.new("TextLabel", frame)
 title.Text = "Sorin Scripts"
 title.Font = Enum.Font.GothamSemibold
@@ -84,7 +89,6 @@ minButton.MouseButton1Click:Connect(function()
 	minimized.Visible = true
 end)
 
--- === Statusanzeige ===
 local status = Instance.new("TextLabel", frame)
 status.Text = "Bitte gib deinen Key ein"
 status.Font = Enum.Font.Gotham
@@ -94,19 +98,17 @@ status.BackgroundTransparency = 1
 status.Size = UDim2.new(1, -20, 0, 25)
 status.Position = UDim2.new(0, 10, 0, 40)
 
--- === Key Eingabe ===
 local keyBox = Instance.new("TextBox", frame)
 keyBox.Size = UDim2.new(1, -20, 0, 35)
 keyBox.Position = UDim2.new(0, 10, 0, 70)
 keyBox.PlaceholderText = "Enter your key here..."
 keyBox.Font = Enum.Font.Gotham
 keyBox.TextSize = 16
-keyBox.Text = ""
+keyBox.Text = savedKey
 keyBox.TextColor3 = Color3.new(1,1,1)
 keyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 6)
 
--- === Buttons ===
 local function createButton(text, yPos)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, -20, 0, 30)
@@ -125,7 +127,6 @@ local inputBtn = createButton("🔒 Input", 115)
 local getKeyBtn = createButton("🌐 Get Key", 155)
 local discordBtn = createButton("💬 Copy Discord", 195)
 
--- === Button-Aktionen ===
 inputBtn.MouseButton1Click:Connect(function()
 	local key = keyBox.Text
 	if key == "" then
@@ -151,8 +152,6 @@ inputBtn.MouseButton1Click:Connect(function()
 	end)
 
 	if not success then
-		warn("SERVER-ANTWORT:")
-		warn(response)
 		status.Text = "❌ Fehler: " .. tostring(response)
 		return
 	end
@@ -163,13 +162,15 @@ inputBtn.MouseButton1Click:Connect(function()
 
 	if ok and data.load then
 		status.Text = "✅ Key gültig – lade..."
+		if writefile then
+			writefile("sorin_key.txt", key)
+		end
 		wait(1)
 		loadstring(data.load)()
 	else
 		status.Text = "❌ " .. (data.error or "Ungültiger Key")
 	end
 end)
-
 
 getKeyBtn.MouseButton1Click:Connect(function()
 	pcall(function()
@@ -185,7 +186,6 @@ discordBtn.MouseButton1Click:Connect(function()
 	status.Text = "📎 Discord-Link kopiert"
 end)
 
--- === Spieleranzeige ===
 local nameTag = Instance.new("TextLabel", frame)
 nameTag.Text = "👤 " .. player.Name
 nameTag.Font = Enum.Font.Gotham
@@ -202,7 +202,6 @@ avatar.BackgroundTransparency = 1
 avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=100&height=100&format=png"
 Instance.new("UICorner", avatar).CornerRadius = UDim.new(1, 0)
 
--- === Konsole-Logs ===
 print("Willkommen bei Sorin Scripts")
 print("Version: 0.0.1 Alpha")
 print("Join our Discord: discord.gg/yXgtrQ4kPg")
