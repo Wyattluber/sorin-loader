@@ -1,0 +1,87 @@
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "SorinUI"
+gui.ResetOnSpawn = false
+
+-- === Ladeanimation (rotierender Kreis) ===
+local loadingFrame = Instance.new("Frame")
+loadingFrame.Size = UDim2.new(0, 120, 0, 120)
+loadingFrame.Position = UDim2.new(0.5, -60, 0.5, -60)
+loadingFrame.BackgroundTransparency = 1
+loadingFrame.Parent = gui
+
+local loadingCircle = Instance.new("ImageLabel")
+loadingCircle.Size = UDim2.new(1, 0, 1, 0)
+loadingCircle.BackgroundTransparency = 1
+loadingCircle.Image = "rbxassetid://10137901365" -- Kreis-Loading Icon
+loadingCircle.ImageColor3 = Color3.fromRGB(180, 180, 255)
+loadingCircle.Parent = loadingFrame
+
+-- Rotation starten
+task.spawn(function()
+	while loadingFrame.Parent do
+		local tween = TweenService:Create(loadingCircle, TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+			Rotation = loadingCircle.Rotation + 360
+		})
+		tween:Play()
+		tween.Completed:Wait()
+	end
+end)
+
+-- Nach kurzer Zeit: Infofenster anzeigen
+task.delay(2, function()
+	loadingFrame:Destroy()
+
+	-- === Infobox ===
+	local infoFrame = Instance.new("Frame")
+	infoFrame.Size = UDim2.new(0, 380, 0, 180)
+	infoFrame.Position = UDim2.new(0.5, -190, 0.5, -90)
+	infoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	infoFrame.BorderSizePixel = 0
+	infoFrame.Parent = gui
+	Instance.new("UICorner", infoFrame).CornerRadius = UDim.new(0, 10)
+
+	local infoLabel = Instance.new("TextLabel")
+	infoLabel.Size = UDim2.new(1, -20, 0, 120)
+	infoLabel.Position = UDim2.new(0, 10, 0, 10)
+	infoLabel.Text = "⚠️ Um temporäre VoiceChat-Banns zu umgehen, darfst du das Erlebnis nicht verlassen, solange der 5-Minuten-Bann läuft.\n\nWenn du das Spiel verlässt, während der Bann aktiv ist, musst du die restliche Zeit beim nächsten Beitritt abwarten."
+	infoLabel.TextWrapped = true
+	infoLabel.TextScaled = true
+	infoLabel.Font = Enum.Font.Gotham
+	infoLabel.TextColor3 = Color3.fromRGB(230, 230, 255)
+	infoLabel.BackgroundTransparency = 1
+	infoLabel.Parent = infoFrame
+
+	local okBtn = Instance.new("TextButton")
+	okBtn.Size = UDim2.new(0.4, 0, 0, 35)
+	okBtn.Position = UDim2.new(0.5, -76, 1, -50)
+	okBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
+	okBtn.Text = "Okay"
+	okBtn.TextColor3 = Color3.new(1, 1, 1)
+	okBtn.TextScaled = true
+	okBtn.Font = Enum.Font.GothamBold
+	okBtn.Parent = infoFrame
+	Instance.new("UICorner", okBtn).CornerRadius = UDim.new(0, 6)
+
+	local madeBy = Instance.new("TextLabel")
+	madeBy.Size = UDim2.new(1, -10, 0, 15)
+	madeBy.Position = UDim2.new(0, 5, 1, -20)
+	madeBy.BackgroundTransparency = 1
+	madeBy.Text = "Made by SorinHub"
+	madeBy.TextColor3 = Color3.fromRGB(100, 100, 120)
+	madeBy.TextScaled = true
+	madeBy.Font = Enum.Font.Code
+	madeBy.Parent = infoFrame
+
+	-- Wenn "Okay" gedrückt → Info schließen & VoiceUI laden
+	okBtn.MouseButton1Click:Connect(function()
+		infoFrame:Destroy()
+
+		-- Hier kommt dein ursprüngliches Voice-GUI rein
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Wyattluber/sorin-loader/refs/heads/full-GUI/sorin-loader.lua"))()
+	end)
+end)
