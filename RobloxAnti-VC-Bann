@@ -1,139 +1,185 @@
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "SorinUI"
 gui.ResetOnSpawn = false
 
--- === SOFORTIGES INFOSCREEN ===
-local infoFrame = Instance.new("Frame")
-infoFrame.Size = UDim2.new(0, 440, 0, 240)
-infoFrame.Position = UDim2.new(0.5, -220, 0.5, -120)
-infoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-infoFrame.BorderSizePixel = 0
-infoFrame.Parent = gui
-Instance.new("UICorner", infoFrame).CornerRadius = UDim.new(0, 14)
+-- === Ladebildschirm ===
+local loadingFrame = Instance.new("Frame")
+loadingFrame.Size = UDim2.new(0, 150, 0, 150)
+loadingFrame.Position = UDim2.new(0.5, -75, 0.5, -75)
+loadingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+loadingFrame.BackgroundTransparency = 0
+loadingFrame.BorderSizePixel = 0
+loadingFrame.Parent = gui
+Instance.new("UICorner", loadingFrame).CornerRadius = UDim.new(0, 20)
 
-local infoLabel = Instance.new("TextLabel")
-infoLabel.Size = UDim2.new(1, -40, 0, 150)
-infoLabel.Position = UDim2.new(0, 20, 0, 25)
-infoLabel.Text = "⚠️ **Hinweis zur VoiceChat-Sperre**\n\nDer Anti-VC-Bann funktioniert **nur, wenn du das Erlebnis NICHT verlässt**, während du einen 5-Minuten-VC-Bann hast.\n\nWenn du das Spiel verlässt, solange der Bann aktiv ist, musst du die restliche Zeit nach erneutem Join abwarten, bevor du das Voice-Modul nutzen kannst."
-infoLabel.TextWrapped = true
-infoLabel.TextScaled = true
-infoLabel.Font = Enum.Font.Gotham
-infoLabel.TextColor3 = Color3.fromRGB(230, 230, 255)
-infoLabel.BackgroundTransparency = 1
-infoLabel.Parent = infoFrame
+local loadingCircle = Instance.new("ImageLabel")
+loadingCircle.Size = UDim2.new(0, 100, 0, 100)
+loadingCircle.Position = UDim2.new(0.5, -50, 0.5, -55)
+loadingCircle.BackgroundTransparency = 1
+loadingCircle.Image = "rbxassetid://10137901365" -- Standard roblox loading spinner
+loadingCircle.ImageColor3 = Color3.fromRGB(180, 180, 255)
+loadingCircle.Parent = loadingFrame
 
-local okBtn = Instance.new("TextButton")
-okBtn.Size = UDim2.new(0.5, 0, 0, 38)
-okBtn.Position = UDim2.new(0.25, 0, 1, -56)
-okBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
-okBtn.Text = "Okay"
-okBtn.TextColor3 = Color3.new(1, 1, 1)
-okBtn.TextScaled = true
-okBtn.Font = Enum.Font.GothamBold
-okBtn.Parent = infoFrame
-Instance.new("UICorner", okBtn).CornerRadius = UDim.new(0, 10)
+local loadingLabel = Instance.new("TextLabel")
+loadingLabel.Size = UDim2.new(1, 0, 0, 40)
+loadingLabel.Position = UDim2.new(0, 0, 1, -35)
+loadingLabel.Text = "Lade Sorin Voice..."
+loadingLabel.TextColor3 = Color3.fromRGB(180, 180, 255)
+loadingLabel.TextScaled = true
+loadingLabel.Font = Enum.Font.GothamBold
+loadingLabel.BackgroundTransparency = 1
+loadingLabel.Parent = loadingFrame
 
-local madeBy = Instance.new("TextLabel")
-madeBy.Size = UDim2.new(1, -12, 0, 18)
-madeBy.Position = UDim2.new(0, 6, 1, -22)
-madeBy.BackgroundTransparency = 1
-madeBy.Text = "Made by SorinHub 🚀"
-madeBy.TextColor3 = Color3.fromRGB(120, 120, 150)
-madeBy.TextScaled = true
-madeBy.Font = Enum.Font.Code
-madeBy.Parent = infoFrame
+-- Spinner Animation
+local runAnim = true
+task.spawn(function()
+    while runAnim and loadingCircle.Parent do
+        loadingCircle.Rotation = 0
+        local tween = TweenService:Create(loadingCircle, TweenInfo.new(1, Enum.EasingStyle.Linear), {Rotation = 360})
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end)
 
--- === Beim Klick auf Okay: Info weg, Voice-UI wird geladen ===
-okBtn.MouseButton1Click:Connect(function()
-    infoFrame:Destroy()
-    -- === VOICE UI HIER DIREKT LADEN ===
+-- === Nach 3 Sekunden: Ladebildschirm ausblenden, Infobox anzeigen ===
+task.delay(3, function()
+    runAnim = false
+    loadingFrame:Destroy()
 
-    local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0, 250, 0, 150)
-    Frame.Position = UDim2.new(1, -260, 1, -200)
-    Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    Frame.BackgroundTransparency = 0.1
-    Frame.BorderSizePixel = 0
-    Frame.Name = "SorinFrame"
-    Frame.Active = true
-    Frame.Draggable = true
-    Frame.Parent = gui
-    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+    -- === Infobox ===
+    local infoFrame = Instance.new("Frame")
+    infoFrame.Size = UDim2.new(0, 440, 0, 240)
+    infoFrame.Position = UDim2.new(0.5, -220, 0.5, -120)
+    infoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    infoFrame.BorderSizePixel = 0
+    infoFrame.Parent = gui
+    Instance.new("UICorner", infoFrame).CornerRadius = UDim.new(0, 14)
 
-    local TopLine = Instance.new("Frame")
-    TopLine.Size = UDim2.new(1, -10, 0, 2)
-    TopLine.Position = UDim2.new(0, 5, 0, 40)
-    TopLine.BackgroundColor3 = Color3.fromRGB(90, 90, 110)
-    TopLine.BorderSizePixel = 0
-    TopLine.Parent = Frame
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Size = UDim2.new(1, -40, 0, 150)
+    infoLabel.Position = UDim2.new(0, 20, 0, 25)
+    infoLabel.Text = "⚠️ Hinweis zur VoiceChat-Sperre\n\nDer Anti-VC-Bann funktioniert **nur, wenn du das Erlebnis NICHT verlässt**, während du einen 5-Minuten-VC-Bann hast.\n\nWenn du das Spiel verlässt, solange der Bann aktiv ist, musst du die restliche Zeit nach erneutem Join abwarten, bevor du das Voice-Modul nutzen kannst."
+    infoLabel.TextWrapped = true
+    infoLabel.TextScaled = true
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextColor3 = Color3.fromRGB(230, 230, 255)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Parent = infoFrame
 
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -40, 0, 30)
-    Title.Position = UDim2.new(0, 10, 0, 5)
-    Title.BackgroundTransparency = 1
-    Title.Text = "🎙 Voice Control"
-    Title.TextColor3 = Color3.fromRGB(180, 180, 255)
-    Title.TextScaled = true
-    Title.Font = Enum.Font.GothamSemibold
-    Title.Parent = Frame
+    local okBtn = Instance.new("TextButton")
+    okBtn.Size = UDim2.new(0.5, 0, 0, 38)
+    okBtn.Position = UDim2.new(0.25, 0, 1, -56)
+    okBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
+    okBtn.Text = "Okay"
+    okBtn.TextColor3 = Color3.new(1, 1, 1)
+    okBtn.TextScaled = true
+    okBtn.Font = Enum.Font.GothamBold
+    okBtn.Parent = infoFrame
+    Instance.new("UICorner", okBtn).CornerRadius = UDim.new(0, 10)
 
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Size = UDim2.new(0, 25, 0, 25)
-    CloseBtn.Position = UDim2.new(1, -30, 0, 7)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    CloseBtn.Text = "×"
-    CloseBtn.TextColor3 = Color3.new(1, 1, 1)
-    CloseBtn.TextScaled = true
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.Parent = Frame
-    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+    local madeBy = Instance.new("TextLabel")
+    madeBy.Size = UDim2.new(1, -12, 0, 18)
+    madeBy.Position = UDim2.new(0, 6, 1, -22)
+    madeBy.BackgroundTransparency = 1
+    madeBy.Text = "Made by SorinHub 🚀"
+    madeBy.TextColor3 = Color3.fromRGB(120, 120, 150)
+    madeBy.TextScaled = true
+    madeBy.Font = Enum.Font.Code
+    madeBy.Parent = infoFrame
 
-    local JoinBtn = Instance.new("TextButton")
-    JoinBtn.Size = UDim2.new(0.9, 0, 0, 35)
-    JoinBtn.Position = UDim2.new(0.05, 0, 0, 60)
-    JoinBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
-    JoinBtn.Text = "🔊 Voice aktivieren"
-    JoinBtn.TextColor3 = Color3.new(1, 1, 1)
-    JoinBtn.TextScaled = true
-    JoinBtn.Font = Enum.Font.GothamBold
-    JoinBtn.Parent = Frame
-    Instance.new("UICorner", JoinBtn).CornerRadius = UDim.new(0, 6)
+    -- === Beim Klick auf Okay: Info weg, Voice-UI wird geladen ===
+    okBtn.MouseButton1Click:Connect(function()
+        infoFrame:Destroy()
+        -- === VOICE UI LADEN ===
 
-    local MadeBy = Instance.new("TextLabel")
-    MadeBy.Size = UDim2.new(1, -10, 0, 15)
-    MadeBy.Position = UDim2.new(0, 5, 1, -20)
-    MadeBy.BackgroundTransparency = 1
-    MadeBy.Text = "Made by SorinHub 🚀"
-    MadeBy.TextColor3 = Color3.fromRGB(100, 100, 120)
-    MadeBy.TextScaled = true
-    MadeBy.Font = Enum.Font.Code
-    MadeBy.Parent = Frame
+        local Frame = Instance.new("Frame")
+        Frame.Size = UDim2.new(0, 250, 0, 150)
+        Frame.Position = UDim2.new(1, -260, 1, -200)
+        Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        Frame.BackgroundTransparency = 0.1
+        Frame.BorderSizePixel = 0
+        Frame.Name = "SorinFrame"
+        Frame.Active = true
+        Frame.Draggable = true
+        Frame.Parent = gui
+        Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
 
-    CloseBtn.MouseButton1Click:Connect(function()
-        gui:Destroy()
-    end)
+        local TopLine = Instance.new("Frame")
+        TopLine.Size = UDim2.new(1, -10, 0, 2)
+        TopLine.Position = UDim2.new(0, 5, 0, 40)
+        TopLine.BackgroundColor3 = Color3.fromRGB(90, 90, 110)
+        TopLine.BorderSizePixel = 0
+        TopLine.Parent = Frame
 
-    JoinBtn.MouseButton1Click:Connect(function()
-        local success, err = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Wyattluber/sorin-loader/refs/heads/full-GUI/sorin-loader.lua"))()
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, -40, 0, 30)
+        Title.Position = UDim2.new(0, 10, 0, 5)
+        Title.BackgroundTransparency = 1
+        Title.Text = "🎙 Voice Control"
+        Title.TextColor3 = Color3.fromRGB(180, 180, 255)
+        Title.TextScaled = true
+        Title.Font = Enum.Font.GothamSemibold
+        Title.Parent = Frame
+
+        local CloseBtn = Instance.new("TextButton")
+        CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+        CloseBtn.Position = UDim2.new(1, -30, 0, 7)
+        CloseBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        CloseBtn.Text = "×"
+        CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+        CloseBtn.TextScaled = true
+        CloseBtn.Font = Enum.Font.GothamBold
+        CloseBtn.Parent = Frame
+        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+        local JoinBtn = Instance.new("TextButton")
+        JoinBtn.Size = UDim2.new(0.9, 0, 0, 35)
+        JoinBtn.Position = UDim2.new(0.05, 0, 0, 60)
+        JoinBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 130)
+        JoinBtn.Text = "🔊 Voice aktivieren"
+        JoinBtn.TextColor3 = Color3.new(1, 1, 1)
+        JoinBtn.TextScaled = true
+        JoinBtn.Font = Enum.Font.GothamBold
+        JoinBtn.Parent = Frame
+        Instance.new("UICorner", JoinBtn).CornerRadius = UDim.new(0, 6)
+
+        local MadeBy = Instance.new("TextLabel")
+        MadeBy.Size = UDim2.new(1, -10, 0, 15)
+        MadeBy.Position = UDim2.new(0, 5, 1, -20)
+        MadeBy.BackgroundTransparency = 1
+        MadeBy.Text = "Made by SorinHub 🚀"
+        MadeBy.TextColor3 = Color3.fromRGB(100, 100, 120)
+        MadeBy.TextScaled = true
+        MadeBy.Font = Enum.Font.Code
+        MadeBy.Parent = Frame
+
+        CloseBtn.MouseButton1Click:Connect(function()
+            gui:Destroy()
         end)
-        if success then
-            StarterGui:SetCore("SendNotification", {
-                Title = "Voice aktiviert",
-                Text = "Sorin Voice-Modul wurde geladen.",
-                Duration = 3
-            })
-        else
-            StarterGui:SetCore("SendNotification", {
-                Title = "Fehler",
-                Text = "Voice-Modul konnte nicht geladen werden.",
-                Duration = 3
-            })
-            warn("SorinLoader Error:", err)
-        end
+
+        JoinBtn.MouseButton1Click:Connect(function()
+            local success, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Wyattluber/sorin-loader/refs/heads/full-GUI/sorin-loader.lua"))()
+            end)
+            if success then
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Voice aktiviert",
+                    Text = "Sorin Voice-Modul wurde geladen.",
+                    Duration = 3
+                })
+            else
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Fehler",
+                    Text = "Voice-Modul konnte nicht geladen werden.",
+                    Duration = 3
+                })
+                warn("SorinLoader Error:", err)
+            end
+        end)
     end)
 end)
