@@ -17,7 +17,7 @@ if player:FindFirstChild("PlayerGui"):FindFirstChild("SorinUI") then
             Text = "Der Anti-VC-Schutz ist schon aktiv!",
             Duration = 5
         })
-    elseif _G.SorinOpenCount >= 2 then
+    elseif _G.SorinOpenCount >= 3 then
         local ui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
         ui.ResetOnSpawn = false
         local bg = Instance.new("Frame", ui)
