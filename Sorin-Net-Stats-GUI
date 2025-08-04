@@ -1,0 +1,128 @@
+-- Sorin Debug UI v1 - Testsystem
+-- Kompakt, bewegbar, immer im Vordergrund, mit Debounce & Netzwerkinfo
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Stats = game:GetService("Stats")
+local LocalPlayer = Players.LocalPlayer
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SorinDebugUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+screenGui.DisplayOrder = 999999
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 110)
+frame.Position = UDim2.new(1, -230, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+frame.BorderSizePixel = 0
+frame.ZIndex = 10000
+frame.Active = true
+frame.Draggable = false
+frame.Parent = screenGui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -10, 0, 20)
+title.Position = UDim2.new(0, 5, 0, 4)
+title.BackgroundTransparency = 1
+title.Text = "🚀 Sorin Debug"
+title.TextColor3 = Color3.fromRGB(160, 200, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.ZIndex = 10001
+title.Parent = frame
+
+-- Info Text
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, -10, 1, -30)
+info.Position = UDim2.new(0, 5, 0, 26)
+info.BackgroundTransparency = 1
+info.TextColor3 = Color3.fromRGB(255, 255, 255)
+info.TextXAlignment = Enum.TextXAlignment.Left
+info.TextYAlignment = Enum.TextYAlignment.Top
+info.TextWrapped = true
+info.TextScaled = false
+info.Font = Enum.Font.Code
+info.Text = "Warte auf Daten..."
+info.ZIndex = 10001
+info.Parent = frame
+
+-- FPS & Ping Tracker
+local lastUpdate = 0
+local fps = 0
+local ping = 0
+local maxSamples = 30
+local frameTimes = {}
+
+RunService.RenderStepped:Connect(function(dt)
+	table.insert(frameTimes, dt)
+	if #frameTimes > maxSamples then
+		table.remove(frameTimes, 1)
+	end
+end)
+
+-- Netzwerkdaten lesen
+local function getNetworkInfo()
+	local pingStat = Stats:FindFirstChild("PerformanceStats"):FindFirstChild("Ping")
+	local sentStat = Stats:FindFirstChild("PerformanceStats"):FindFirstChild("Data Ping")
+	local recvStat = Stats:FindFirstChild("PerformanceStats"):FindFirstChild("ReceiveRate")
+
+	local pingValue = pingStat and math.floor(pingStat:GetValue()) or -1
+	local sent = sentStat and math.floor(sentStat:GetValue()) or 0
+	local recv = recvStat and math.floor(recvStat:GetValue()) or 0
+
+	return pingValue, sent, recv
+end
+
+-- UI Update Loop
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local sum = 0
+		for _, t in ipairs(frameTimes) do sum += t end
+		fps = math.floor(#frameTimes / sum)
+		ping, sent, recv = getNetworkInfo()
+
+		local warning = ""
+		if ping >= 130 then
+			warning = "\n⚠️ Netzwerk instabil oder VPN aktiv?"
+		end
+
+		info.Text = string.format(
+			"📶 Ping: %d ms\n🎮 FPS: %d\n📤 Upload: %d KB/s\n📥 Download: %d KB/s%s",
+			ping, fps, sent, recv, warning
+		)
+	end
+end)
+
+-- Drag System mit Debounce
+local dragging = false
+local dragInput, dragStart, startPos
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
